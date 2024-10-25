@@ -239,6 +239,53 @@ def show_all(contacts: AddressBook) -> str:
     return result.strip()
 
 
+@input_error
+def add_birthday(args: List[str], contacts: AddressBook) -> str:
+    """Add birthday to contact."""
+    if len(args) < 2:
+        raise ValueError("Not enough arguments provided.")
+    name = " ".join(args[:-1]).strip()
+    birthday = args[-1].strip()
+    record = contacts.find(name)
+    if record:
+        record.add_birthday(birthday)
+    else:
+        record = Record(name)
+        record.add_birthday(birthday)
+        contacts.add_record(record)
+    record.add_birthday(birthday)
+    return f"Added birthday {birthday} for {name}."
+
+
+@input_error
+def show_birthday(args: List[str], contacts: AddressBook) -> str:
+    """Show birthday for a contact."""
+    if len(args) == 0:
+        raise IndexError("No contact name provided.")
+
+    name = " ".join(args).strip()
+    record = contacts.find(name)
+    if record is None:
+        raise KeyError(f"Record with name {name} not found.")
+    if record.birthday:
+        return f"{name}'s birthday is on {record.birthday}."
+    return f"{name} does not have a birthday recorded."
+
+
+@input_error
+def birthdays(contacts: AddressBook) -> str:
+    """Show upcoming birthdays."""
+    upcoming_birthdays = contacts.get_upcoming_birthdays()
+    if not upcoming_birthdays:
+        return "No upcoming birthdays within the next week."
+    return "\n".join(
+        [
+            f"{entry['name']} - {entry['congratulation_date']}"
+            for entry in upcoming_birthdays
+        ]
+    )
+
+
 def show_help() -> str:
     """print help"""
     help_text = """
@@ -248,6 +295,9 @@ def show_help() -> str:
     - change <name> <old_phone> <new_phone>: Change an existing contact's phone number.
     - phone <name>: Show the phone number of a contact.
     - all: Show all contacts.
+    - add-birthday <name> <DD.MM.YYYY>: Add birthday for a contact.
+    - show-birthday <name>: Show birthday of a contact.
+    - birthdays: Show upcoming birthdays within the next week.
     - close or exit: Exit the bot.
     - help: Show this help message.
     """
@@ -276,6 +326,12 @@ def main() -> None:
             print(show_phone(args, contacts))
         elif command == "all":
             print(show_all(contacts))
+        elif command == "add-birthday":
+            print(add_birthday(args, contacts))
+        elif command == "show-birthday":
+            print(show_birthday(args, contacts))
+        elif command == "birthdays":
+            print(birthdays(contacts))
         elif command == "help":
             print(show_help())
         else:
